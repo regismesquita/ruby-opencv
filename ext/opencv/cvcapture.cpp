@@ -62,6 +62,7 @@ define_ruby_class()
   rb_hash_aset(video_interface, ID2SYM(rb_intern("quicktime")), INT2FIX(CV_CAP_QT));
   
   rb_define_singleton_method(rb_klass, "open", RUBY_METHOD_FUNC(rb_open), -1);
+  rb_define_singleton_method(rb_klass, "get_picture", RUBY_METHOD_FUNC(rb_get_picture), -1);
   
   rb_define_method(rb_klass, "grab", RUBY_METHOD_FUNC(rb_grab), 0);
   rb_define_method(rb_klass, "retrieve", RUBY_METHOD_FUNC(rb_retrieve), 0);
@@ -99,6 +100,31 @@ cvcapture_free(void *ptr)
 { 
   if (ptr)
     cvReleaseCapture((CvCapture**)&ptr);
+}
+
+VALUE
+rb_get_picture(int argc, VALUE *argv, VALUE self)
+{
+  CvCapture *capture = 0;
+  VALUE image = Qnil;
+  try {
+    capture = cvCaptureFromCAM(CV_CAP_ANY);
+    IplImage *frame = cvQueryFrame(capture);
+    if (!frame)
+      return Qnil;
+    image = cIplImage::new_object(cvSize(frame->width, frame->height),
+				  CV_MAKETYPE(CV_8U, frame->nChannels));
+    if (frame->origin == IPL_ORIGIN_TL)
+      cvCopy(frame, CVARR(image));
+    else
+      cvFlip(frame, CVARR(image));
+  }
+  catch (cv::Exception& e) {
+    raise_cverror(e);
+  }
+  if(capture)
+    cvReleaseCapture(&capture);
+  return image;
 }
 
 /*

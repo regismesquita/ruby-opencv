@@ -25,6 +25,7 @@ void define_ruby_class();
 
 void cvcapture_free(void *ptr);
 VALUE rb_open(int argc, VALUE *argv, VALUE klass);
+VALUE rb_get_picture(int argc, VALUE *argv, VALUE klass);
 
 VALUE rb_grab(VALUE self);
 VALUE rb_retrieve(VALUE self);
